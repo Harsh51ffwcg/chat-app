@@ -112,21 +112,18 @@ button:hover{
 <script>
 const socket = io();
 
-let username = "";
-
-// 👇 ASK NAME WHEN SERVER REQUESTS
+// ask name
 socket.on("ask-name", () => {
-    username = prompt("Enter your name:");
-    if (!username) username = "Anonymous";
-
-    socket.emit("set-name", username);
+    let name = prompt("Enter your name:");
+    if (!name) name = "Anonymous";
+    socket.emit("set-name", name);
 });
 
-// 👇 RECEIVE MESSAGES
+// receive messages
 socket.on("chat message", (data) => {
     const li = document.createElement("li");
 
-    li.innerHTML = `<b>${data.name || "Anonymous"}:</b> ${data.text || ""}`;
+    li.innerHTML = `<b>${data.name}:</b> ${data.text || ""}`;
 
     if (data.image) {
         const img = document.createElement("img");
@@ -135,33 +132,32 @@ socket.on("chat message", (data) => {
         li.appendChild(img);
     }
 
-    document.getElementById("messages").appendChild(li);
+    const messages = document.getElementById("messages");
+    messages.appendChild(li);
+
+    // auto scroll (IMPORTANT)
+    messages.scrollTop = messages.scrollHeight;
 });
 
-// 👇 SEND MESSAGE
+// send message
 function sendMessage() {
-    const text = document.getElementById("input").value;
+    const text = document.getElementById("input").value.trim();
     const file = document.getElementById("imageInput").files[0];
 
-    // text only
-    if (!file) {
-        socket.emit("chat message", {
-            text: text,
-            name: username
-        });
+    if (!text && !file) return; // prevent empty spam
 
+    if (!file) {
+        socket.emit("chat message", { text });
         document.getElementById("input").value = "";
         return;
     }
 
-    // image + text
     const reader = new FileReader();
 
     reader.onload = function () {
         socket.emit("chat message", {
             text: text,
-            image: reader.result,
-            name: username
+            image: reader.result
         });
 
         document.getElementById("input").value = "";
