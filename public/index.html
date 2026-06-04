@@ -14,28 +14,31 @@ body{
     padding:0;
 }
 
+/* container */
 .container{
     max-width:700px;
-    margin:20px auto;
+    margin:10px auto;
     background:white;
     border-radius:10px;
     box-shadow:0 0 10px rgba(0,0,0,0.1);
     overflow:hidden;
 }
 
+/* header */
 .header{
     background:#4CAF50;
     color:white;
     text-align:center;
-    padding:15px;
-    font-size:24px;
+    padding:12px;
+    font-size:20px;
 }
 
+/* messages */
 #messages{
     list-style:none;
     margin:0;
-    padding:15px;
-    height:500px;
+    padding:10px;
+    height:65vh;
     overflow-y:auto;
 }
 
@@ -44,42 +47,67 @@ body{
     margin-bottom:10px;
     padding:10px;
     border-radius:8px;
+    word-wrap:break-word;
 }
 
 img.chat-img{
-    max-width:200px;
+    max-width:100%;
     display:block;
     margin-top:8px;
     border-radius:6px;
 }
 
+/* input area FIXED FOR MOBILE */
 .input-area{
     display:flex;
-    gap:8px;
+    gap:6px;
     padding:10px;
     border-top:1px solid #ddd;
+    flex-wrap:wrap;
+    background:white;
 }
 
+/* input full width on mobile */
 #input{
-    flex:1;
+    flex:1 1 100%;
     padding:12px;
     font-size:16px;
+    border:1px solid #ccc;
+    border-radius:6px;
 }
 
+/* file input */
 #imageInput{
-    width:120px;
+    flex:1;
+    min-width:45%;
 }
 
+/* button full width on mobile */
 button{
-    padding:12px 20px;
+    flex:1;
+    min-width:45%;
+    padding:12px;
     background:#4CAF50;
     color:white;
     border:none;
     cursor:pointer;
+    border-radius:6px;
 }
 
 button:hover{
     background:#45a049;
+}
+
+/* SMALL SCREEN OPTIMIZATION */
+@media (max-width: 480px) {
+
+    #messages{
+        height:60vh;
+    }
+
+    #imageInput, button{
+        min-width:100%;
+    }
 }
 </style>
 
@@ -135,7 +163,6 @@ socket.on("chat message", (data) => {
     const messages = document.getElementById("messages");
     messages.appendChild(li);
 
-    // auto scroll (IMPORTANT)
     messages.scrollTop = messages.scrollHeight;
 });
 
@@ -144,7 +171,7 @@ function sendMessage() {
     const text = document.getElementById("input").value.trim();
     const file = document.getElementById("imageInput").files[0];
 
-    if (!text && !file) return; // prevent empty spam
+    if (!text && !file) return;
 
     if (!file) {
         socket.emit("chat message", { text });
