@@ -7,7 +7,6 @@
 <title>Real-time Chat Website</title>
 
 <style>
-
 body{
     font-family: Arial, sans-serif;
     background:#f0f2f5;
@@ -47,8 +46,16 @@ body{
     border-radius:8px;
 }
 
+img.chat-img{
+    max-width:200px;
+    display:block;
+    margin-top:8px;
+    border-radius:6px;
+}
+
 .input-area{
     display:flex;
+    gap:8px;
     padding:10px;
     border-top:1px solid #ddd;
 }
@@ -57,6 +64,10 @@ body{
     flex:1;
     padding:12px;
     font-size:16px;
+}
+
+#imageInput{
+    width:120px;
 }
 
 button{
@@ -70,7 +81,6 @@ button{
 button:hover{
     background:#45a049;
 }
-
 </style>
 
 </head>
@@ -86,14 +96,81 @@ button:hover{
 <ul id="messages"></ul>
 
 <div class="input-area">
+
 <input id="input" placeholder="Type a message...">
+
+<input type="file" id="imageInput" accept="image/*">
+
 <button onclick="sendMessage()">Send</button>
+
 </div>
 
 </div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="script.js"></script>
+
+<script>
+const socket = io();
+
+let username = "";
+
+// 👇 ASK NAME WHEN SERVER REQUESTS
+socket.on("ask-name", () => {
+    username = prompt("Enter your name:");
+    if (!username) username = "Anonymous";
+
+    socket.emit("set-name", username);
+});
+
+// 👇 RECEIVE MESSAGES
+socket.on("chat message", (data) => {
+    const li = document.createElement("li");
+
+    li.innerHTML = `<b>${data.name || "Anonymous"}:</b> ${data.text || ""}`;
+
+    if (data.image) {
+        const img = document.createElement("img");
+        img.src = data.image;
+        img.className = "chat-img";
+        li.appendChild(img);
+    }
+
+    document.getElementById("messages").appendChild(li);
+});
+
+// 👇 SEND MESSAGE
+function sendMessage() {
+    const text = document.getElementById("input").value;
+    const file = document.getElementById("imageInput").files[0];
+
+    // text only
+    if (!file) {
+        socket.emit("chat message", {
+            text: text,
+            name: username
+        });
+
+        document.getElementById("input").value = "";
+        return;
+    }
+
+    // image + text
+    const reader = new FileReader();
+
+    reader.onload = function () {
+        socket.emit("chat message", {
+            text: text,
+            image: reader.result,
+            name: username
+        });
+
+        document.getElementById("input").value = "";
+        document.getElementById("imageInput").value = "";
+    };
+
+    reader.readAsDataURL(file);
+}
+</script>
 
 </body>
 </html>
